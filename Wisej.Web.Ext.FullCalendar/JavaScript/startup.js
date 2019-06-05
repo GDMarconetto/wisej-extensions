@@ -51,6 +51,13 @@ this.init = function (options) {
 	options.monthNames = qx.util.Serializer.toNativeObject(qx.locale.Date.getMonthNames("wide", locale));
 	options.monthNamesShort = qx.util.Serializer.toNativeObject(qx.locale.Date.getMonthNames("abbreviated", locale));
 
+    // hiddenDays
+    if (options.hiddenDays != null) {
+        // convert to array
+        var array = JSON.parse(options.hiddenDays);
+        options.hiddenDays = array;
+    }
+
 	// first creation?
 	if (this.calendar == null) {
 
@@ -95,7 +102,7 @@ this.init = function (options) {
 	// patch the fullCalendar class to handle right clicks.
 	this.__patchHandlers();
 
-	this.calendar = new $.fullCalendar.Calendar($(this.container), options);
+    this.calendar = new FullCalendar.Calendar($(this.container), options);
 	this.calendar.render();
 
 	// save the current date in order to fire "currentDateChanged".
@@ -118,16 +125,23 @@ this._onDestroyed = function()
  */
 this.__patchHandlers = function () {
 
-	try {
-		$.fullCalendar.EventPointing.prototype.bindToEl = function (el) {
-			var component = this.component;
-			component.bindSegHandlerToEl(el, 'click', this.handleClick.bind(this));
-			component.bindSegHandlerToEl(el, 'contextmenu', this.handleClick.bind(this));
-			component.bindSegHandlerToEl(el, 'mouseenter', this.handleMouseover.bind(this));
-			component.bindSegHandlerToEl(el, 'mouseleave', this.handleMouseout.bind(this));
-		}
-	}
-	catch (ex) { }
+    try {
+
+        if (!FullCalendar) {
+            return;
+        }
+
+        FullCalendar.EventPointing.prototype.bindToEl = function (el) {
+            var component = this.component;
+            component.bindSegHandlerToEl(el, 'click', this.handleClick.bind(this));
+            component.bindSegHandlerToEl(el, 'contextmenu', this.handleClick.bind(this));
+            component.bindSegHandlerToEl(el, 'mouseenter', this.handleMouseover.bind(this));
+            component.bindSegHandlerToEl(el, 'mouseleave', this.handleMouseout.bind(this));
+        }
+    }
+    catch (ex) {
+        Wisej.Core.logError(ex);
+    }
 }
 
 /**
@@ -427,4 +441,51 @@ this.onRightClick = function (e) {
 
 		Wisej.Core.logError(ex);
 	}
+}
+
+/**
+ * Can be use to update FullCalendar options from dynamic Options property
+ */
+this.setOptions = function (calOptions) {
+
+    try {
+
+        if (!this.calendar) {
+            return;
+        }
+
+        if (!calOptions) {
+            return;
+        }
+
+        for (var key in calOptions) {
+
+            if (!key) {
+                continue;
+            }
+
+            var value = calOptions[key];
+
+            if (!value) {
+                continue;
+            }
+
+            value = value.toString();
+
+            // convert to array (Es hiddenDays https://fullcalendar.io/docs/hiddenDays)
+            if (value.includes("[") && value.includes("]")) {
+
+                var array = JSON.parse(value);
+                this.calendar.option(key, array);
+
+            } else { // normal options set
+
+                this.calendar.option(key, value);
+            }
+        }
+
+
+    } catch (ex) {
+        Wisej.Core.logError(ex);
+    }
 }

@@ -1243,11 +1243,20 @@ namespace Wisej.Web.Ext.FullCalendar
 			Call("exec", "today");
 		}
 
-		/// <summary>
-		/// Moves the calendar to an arbitrary date.
-		/// </summary>
-		/// <param name="dateTime">The date to set the calendar view to.</param>
-		public void GotoDate(DateTime dateTime)
+        /// <summary>
+        /// Update FullCalendar options from Options property
+        /// </summary>
+        public void UpdateOptions()
+        {
+            Call("setOptions", this.Options);
+            Update();
+        }
+
+        /// <summary>
+        /// Moves the calendar to an arbitrary date.
+        /// </summary>
+        /// <param name="dateTime">The date to set the calendar view to.</param>
+        public void GotoDate(DateTime dateTime)
 		{
 			Call("exec", "gotoDate", dateTime);
 		}
@@ -1491,21 +1500,34 @@ namespace Wisej.Web.Ext.FullCalendar
 			}
 		}
 
-		/// <summary>
-		/// Overridden, not used.
-		/// </summary>
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override dynamic Options
-		{
-			get { return null; }
-			set { }
-		}
+        /// <summary>
+        /// Returns or sets the specified options: https://fullcalendar.io/docs.
+        /// </summary>
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public new virtual dynamic Options
+        {
+            get
+            {
+                if (this._options == null)
+                    this._options = new DynamicObject();
 
-		/// <summary>
-		/// Overridden to return our list of script resources.
-		/// </summary>
-		[Browsable(false)]
+                return this._options;
+            }
+
+            set
+            {
+                this._options = value;
+                Update();
+            }
+        }
+
+        private dynamic _options;
+
+        /// <summary>
+        /// Overridden to return our list of script resources.
+        /// </summary>
+        [Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
@@ -1556,8 +1578,17 @@ namespace Wisej.Web.Ext.FullCalendar
 		{
 
 			IWisejControl me = this;
+
 			dynamic options = new DynamicObject();
-			string script = GetResourceString("Wisej.Web.Ext.FullCalendar.JavaScript.startup.js");
+
+            // cloning options to maintain separate "wrapped options" from "user options"
+            if (this._options != null)
+            {
+                DynamicObject o = this._options as DynamicObject;
+                options = o.Clone();
+            }
+
+            string script = GetResourceString("Wisej.Web.Ext.FullCalendar.JavaScript.startup.js");
 
 			options.editable = this.Editable;
 			options.eventBackgroundColor = this.EventBackgroundColor;
@@ -1709,6 +1740,18 @@ namespace Wisej.Web.Ext.FullCalendar
 			return events;
 		}
 
-		#endregion
-	}
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullCalendar));
+            this.SuspendLayout();
+            // 
+            // FullCalendar
+            // 
+            this.InitScript = resources.GetString("$this.InitScript");
+            this.Name = "FullCalendar";
+            this.ResumeLayout(false);
+        }
+
+        #endregion
+    }
 }
