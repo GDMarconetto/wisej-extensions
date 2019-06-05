@@ -353,11 +353,18 @@ this.onDayClick = function (date, ev, view) {
 	var type = "dayClick";
 	var day = date.local().toDate();
 	if (!date.hasTime())
-		day = new Date(date.year(), date.month(), date.date());
+        day = new Date(date.year(), date.month(), date.date());
+
 	var data = {
-		date: day,
-		button: ev.button, x: ev.pageX, y: ev.pageY
-	};
+        date: day
+    };
+
+    // sometimes ev is not defined
+    if (ev) {
+        data.button = ev.button;
+        data.x = ev.pageX;
+        data.y = ev.pageY;
+    }
 
 	// detect double clicks.
 	clearTimeout(this.__singleClickTimer);
