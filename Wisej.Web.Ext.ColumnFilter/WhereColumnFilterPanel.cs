@@ -127,21 +127,26 @@ namespace Wisej.Web.Ext.ColumnFilter
 		{
 			string where = "";
 
-			if (this.DataGridViewColumn.ValueType == typeof(System.String) || this.DataGridViewColumn is DataGridViewComboBoxColumn)
+			Type type = this.DataGridViewColumn.ValueType;
+			if (Nullable.GetUnderlyingType(type) != null)
+				type = Nullable.GetUnderlyingType(type);
+
+			if (type == typeof(System.String) || this.DataGridViewColumn is DataGridViewComboBoxColumn)
 			{
 				where = GetWhereForString();
 			}
-			else if (this.DataGridViewColumn.ValueType == typeof(System.DateTime))
+			else if (type == typeof(System.DateTime))
 			{
 				where = GetWhereForDateTime();
 			}
-			else if (this.DataGridViewColumn.ValueType == typeof(System.Int32) ||
-					 this.DataGridViewColumn.ValueType == typeof(System.Decimal) ||
-					 this.DataGridViewColumn.ValueType == typeof(System.Double))
+			else if (type == typeof(System.Int32) ||
+					 type == typeof(System.Decimal) ||
+					 type == typeof(System.Double) ||
+					 type == typeof(System.Int64))				 
 			{
 				where = GetWhereForNumber();
 			}			
-			else if (this.DataGridViewColumn.ValueType == typeof(System.Boolean))
+			else if (type == typeof(System.Boolean))
 			{
 				where = GetWhereForBool();
 			}
@@ -167,7 +172,11 @@ namespace Wisej.Web.Ext.ColumnFilter
 			string where = "";
 			string Condition = "";
 
-			string Type = this.DataGridViewColumn.ValueType.ToString().Replace("System.", "");
+			Type type = this.DataGridViewColumn.ValueType;
+			if (Nullable.GetUnderlyingType(type) != null)
+				type = Nullable.GetUnderlyingType(type);
+
+			string Type = type.ToString().Replace("System.", "");			
 			string Value1 = Value1 = "Convert.To" + Type + "(Cells[" + this.DataGridViewColumn.Index.ToString() + "].Value)";
 
 			if (cmbOperator.SelectedIndex > -1)
@@ -257,7 +266,7 @@ namespace Wisej.Web.Ext.ColumnFilter
 			string where = "";
 			string condition = "";
 
-			string Value1 = "Convert.ToDateTime(Cells[" + this.DataGridViewColumn.Index.ToString() + "].Value).Date";
+			string Value1 = "Cells[" + this.DataGridViewColumn.Index.ToString() + "].Value.ToString().Length > 0 && Convert.ToDateTime(Cells[" + this.DataGridViewColumn.Index.ToString() + "].Value).Date";
 
 			if (cmbOperator.SelectedIndex > -1)
 			{
@@ -341,6 +350,7 @@ namespace Wisej.Web.Ext.ColumnFilter
 								condition = GetStrCondition(value, "(\"" + txt.Text + "\")", cmb.SelectedItem.ToString());
 							else
 								condition = GetStrCondition(value, "(\"" + txt.Text.ToUpper() + "\")", cmb.SelectedItem.ToString());
+
 							where = AppendCondition(condition, LogicalOperator, where);
 						}
 					}
@@ -378,6 +388,8 @@ namespace Wisej.Web.Ext.ColumnFilter
 				return value2.Length == 0 ? "" : value1 + " != " + value2;
 			else if (operation == "contains")
 				return value2.Length == 0 ? "" : value1 + ".Contains " + value2;
+			else if (operation == "does not contain")
+				return value2.Length == 0 ? "" : "!" + value1 + ".Contains " + value2;
 			else if (operation == "starts with")
 				return value2.Length == 0 ? "" : value1 + ".StartsWith " + value2;
 			else if (operation == "ends with")
@@ -417,23 +429,36 @@ namespace Wisej.Web.Ext.ColumnFilter
 
 		private void clear_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
+			Clear(false);
+		}
+
+		/// <summary>
+		/// Clear the filter panel
+		/// </summary>
+		/// <param name="applyFilters"></param>
+		public override void Clear(bool applyFilters = true)
+		{
 			foreach (Control c in this.flowLayoutPanel.Controls)
 			{
 				if (c is ComboBox)
 				{
-					var Combo = c as ComboBox;
-					Combo.SelectedIndex = -1;
+					var combo = c as ComboBox;
+					combo.SelectedIndex = -1;
 				}
 				else if (c is TextBox)
 				{
-					var TextBox = c as TextBox;
-					TextBox.Clear();
+					var textBox = c as TextBox;
+					textBox.Clear();
 				}
 				else if (c is DateTimePicker)
 				{
-					var Dtp = c as DateTimePicker;
-					Dtp.Value = DateTime.MinValue;
+					var dtp = c as DateTimePicker;
+					dtp.Value = DateTime.MinValue;
 				}
+			}
+			if (applyFilters)
+			{
+				ApplyFilters();
 			}
 		}
 

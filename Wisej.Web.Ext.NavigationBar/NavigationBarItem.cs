@@ -134,8 +134,8 @@ namespace Wisej.Web.Ext.NavigationBar
 		/// Returns or sets the icon of the <see cref="NavigationBarItem"/>.
 		/// </summary>
 		[DefaultValue(null)]
-		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design")]
-		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design", typeof(UITypeEditor))]
+		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171")]
+		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171", typeof(UITypeEditor))]
 		public string Icon
 		{
 			get => this.icon.ImageSource;
@@ -284,20 +284,51 @@ namespace Wisej.Web.Ext.NavigationBar
 		[DefaultValue(false)]
 		public bool ShowShortcut
 		{
-			get => this.shortcut.Visible;
-			set => this.shortcut.Visible = !this.CompactView && value;
+			get { return this._showShortcut; }
+			set
+			{
+				this._showShortcut = value;
+				this.shortcut.Visible = !this.CompactView && value;
+			}
 		}
+		private bool _showShortcut;
 
 		/// <summary>
 		/// Returns or sets the shortcut icon.
 		/// </summary>
 		[DefaultValue("spinner-plus")]
-		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design")]
-		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design", typeof(UITypeEditor))]
+		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171")]
+		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171", typeof(UITypeEditor))]
 		public string ShortcutIcon
 		{
 			get => this.shortcut.ImageSource;
 			set => this.shortcut.ImageSource = value;
+		}
+
+		/// <summary>
+		/// Returns or sets the height of the <see cref="NavigationBarItem"/> and its child items.
+		/// </summary>
+		internal int ItemHeight
+		{
+			get { return this.header.Height; }
+			set
+			{
+				if (value < 0 || value > 32000)
+					throw new ArgumentOutOfRangeException(nameof(ItemHeight));
+
+				if (this.header.Height != value)
+				{
+					this.header.Height = value;
+
+					if (this._items?.Count > 0)
+					{
+						foreach (var item in this.Items)
+						{
+							item.ItemHeight = value;
+						}
+					}
+				}
+			}
 		}
 
 		#endregion
@@ -588,8 +619,8 @@ namespace Wisej.Web.Ext.NavigationBar
 
 			this.title.Visible = !compactView;
 			this.open.Visible = !compactView && this.Items.Count > 0;
+			this.shortcut.Visible = !compactView && this.ShowShortcut;
 			this.info.Visible = !compactView && !String.IsNullOrEmpty(this.InfoText);
-			this.shortcut.Visible = !compactView && !String.IsNullOrEmpty(this.shortcut.Text);
 
 			if (String.IsNullOrEmpty (this.ToolTipText))
 				this.header.ToolTipText = compactView ? this.title.Text : null;
@@ -619,7 +650,7 @@ namespace Wisej.Web.Ext.NavigationBar
 			}
 		}
 
-		private void header_Click(object sender, EventArgs e)
+		private void NavigationBarItem_Click(object sender, EventArgs e)
 		{
 			this.Expanded = !this.Expanded;
 			this.NavigationBar?.FireItemClick(this);
@@ -629,6 +660,9 @@ namespace Wisej.Web.Ext.NavigationBar
 		{
 			this.open.Visible =
 				!this.CompactView;
+
+			if (this.NavigationBar != null)
+				((NavigationBarItem)e.Control).ItemHeight = this.NavigationBar.ItemHeight;
 		}
 
 		private void items_ControlRemoved(object sender, ControlEventArgs e)

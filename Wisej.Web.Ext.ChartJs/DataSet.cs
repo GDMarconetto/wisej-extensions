@@ -56,6 +56,17 @@ namespace Wisej.Web.Ext.ChartJS
 		}
 
 		/// <summary>
+		/// Hides the dataset.
+		/// </summary>
+		[DefaultValue(false)]
+		[Description("Hides the dataset.")]
+		public bool Hidden
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
 		/// Returns the type of chart that plots this type of <see cref="T:Wisej.Web.Ext.ChartJS.DataSet"/>.
 		/// </summary>
 		[Description("Returns the type of chart that plots this data set.")]
@@ -74,6 +85,15 @@ namespace Wisej.Web.Ext.ChartJS
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[Editor("System.ComponentModel.Design.ArrayEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
 		public object[] Data
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
+		/// Formatted representation of the data to plot displayed when <see cref="OptionsDataLabel.Display"/> is true.
+		/// </summary>
+		public string[] Formatted
 		{
 			get;
 			set;
@@ -186,6 +206,17 @@ namespace Wisej.Web.Ext.ChartJS
 		[DefaultValue(typeof(Color), "")]
 		[Description("The color of the line.")]
 		public new Color BorderColor
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
+		/// Length and spacing of dashes. See https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setLineDash.
+		/// </summary>
+		[DefaultValue(null)]
+		[Description("Length and spacing of dashes.")]
+		public int[] BorderDash
 		{
 			get;
 			set;

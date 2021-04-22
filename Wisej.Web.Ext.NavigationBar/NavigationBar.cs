@@ -75,9 +75,9 @@ namespace Wisej.Web.Ext.NavigationBar
 		public event NavigationBarItemClickEventHandler ItemClick;
 
 		/// <summary>
-		/// Fireds when the value of the property <see cref="CompactView"/> changes.
+		/// Fired when the value of the property <see cref="CompactView"/> changes.
 		/// </summary>
-		[Description("Fireds when the value of the property CompactView changes.")]
+		[Description("Fired when the value of the property CompactView changes.")]
 		public event EventHandler CompactViewChanged;
 
 		/// <summary>
@@ -164,8 +164,8 @@ namespace Wisej.Web.Ext.NavigationBar
 		/// Returns or sets the logo to display in the <see cref="NavigationBar"/>.
 		/// </summary>
 		[DefaultValue("")]
-		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design")]
-		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design", typeof(UITypeEditor))]
+		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171")]
+		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171", typeof(UITypeEditor))]
 		public string Logo
 		{
 			get => this.logo.ImageSource;
@@ -194,8 +194,8 @@ namespace Wisej.Web.Ext.NavigationBar
 		/// <summary>
 		/// Returns or sets the user avatar to display in the <see cref="NavigationBar"/>.
 		/// </summary>
-		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design")]
-		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design", typeof(UITypeEditor))]
+		[TypeConverter("Wisej.Design.ImageSourceConverter, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171")]
+		[Editor("Wisej.Design.ImageSourceEditor, Wisej.Framework.Design, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17bef35e11b84171", typeof(UITypeEditor))]
 		public string UserAvatar
 		{
 			get => this.avatar.ImageSource;
@@ -233,6 +233,34 @@ namespace Wisej.Web.Ext.NavigationBar
 		}
 
 		/// <summary>
+		/// Returns or sets the height of the child <see cref="NavigationBarItem"/> elements.
+		/// </summary>
+		[DefaultValue(45)]
+		public int ItemHeight
+		{
+			get { return this._itemHeight; }
+			set
+			{
+				if (value < 0 || value > 32000)
+					throw new ArgumentOutOfRangeException(nameof(ItemHeight));
+
+				if (this._itemHeight != value)
+				{
+					this._itemHeight = value;
+
+					if (this._items?.Count > 0)
+					{
+						foreach (var item in this.Items)
+						{
+							item.ItemHeight = value;
+						}
+					}
+				}
+			}
+		}
+		private int _itemHeight = 45;
+
+		/// <summary>
 		/// Returns the collection of items to display in the <see cref="NavigationBar"/>.
 		/// </summary>
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
@@ -241,6 +269,11 @@ namespace Wisej.Web.Ext.NavigationBar
 			get => this._items = this._items ?? new NavigationBarItemCollection(this.items);
 		}
 		private NavigationBarItemCollection _items;
+
+		private void items_ControlAdded(object sender, ControlEventArgs e)
+		{
+			((NavigationBarItem)e.Control).ItemHeight = this.ItemHeight;
+		}
 
 		#endregion
 
