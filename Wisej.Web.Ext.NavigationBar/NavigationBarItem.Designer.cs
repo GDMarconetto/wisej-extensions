@@ -44,8 +44,6 @@
 			// header
 			// 
 			this.header.AppearanceKey = "navbar-item/header";
-			this.header.Anonymous = true;
-			this.header.BackColor = System.Drawing.Color.Transparent;
 			this.header.Controls.Add(this.icon);
 			this.header.Controls.Add(this.title);
 			this.header.Controls.Add(this.shortcut);
@@ -60,6 +58,8 @@
 			this.header.Size = new System.Drawing.Size(502, 45);
 			this.header.Spacing = 12;
 			this.header.TabIndex = 1;
+			this.header.TabStop = true;
+			this.header.Click += new System.EventHandler(this.header_Click);
 			// 
 			// icon
 			// 
@@ -71,7 +71,6 @@
 			this.icon.Name = "icon";
 			this.icon.Size = new System.Drawing.Size(20, 20);
 			this.icon.SizeMode = Wisej.Web.PictureBoxSizeMode.Zoom;
-			this.icon.TabIndex = 0;
 			// 
 			// title
 			// 
@@ -95,7 +94,6 @@
 			this.shortcut.MaximumSize = new System.Drawing.Size(20, 20);
 			this.shortcut.Name = "shortcut";
 			this.shortcut.Size = new System.Drawing.Size(18, 20);
-			this.shortcut.TabIndex = 4;
 			this.shortcut.Visible = false;
 			this.shortcut.Click += new System.EventHandler(this.shortcut_Click);
 			// 
@@ -117,29 +115,29 @@
 			// open
 			// 
 			this.header.SetAlignY(this.open, Wisej.Web.VerticalAlignment.Middle);
-			this.open.Anonymous = true;
 			this.open.AppearanceKey = "navbar-item/open";
 			this.open.Location = new System.Drawing.Point(466, 12);
 			this.open.Margin = new Wisej.Web.Padding(0);
 			this.open.MaximumSize = new System.Drawing.Size(20, 20);
 			this.open.Name = "open";
 			this.open.Size = new System.Drawing.Size(16, 20);
-			this.open.TabIndex = 2;
 			this.open.Visible = false;
+			this.open.Click += new System.EventHandler(this.open_Click);
 			// 
 			// items
 			// 
+			this.items.AppearanceKey = "navbar-item/items";
 			this.items.AutoSize = true;
 			this.items.AutoSizeMode = Wisej.Web.AutoSizeMode.GrowAndShrink;
 			this.items.LayoutStyle = Wisej.Web.FlexLayoutStyle.Vertical;
 			this.items.Location = new System.Drawing.Point(0, 45);
 			this.items.Margin = new Wisej.Web.Padding(0);
 			this.items.Name = "items";
-			this.items.Size = new System.Drawing.Size(0, 0);
-			this.items.TabIndex = 0;
+			this.items.Size = new System.Drawing.Size(502, 0);
 			this.items.Spacing = 0;
+			this.items.TabIndex = 0;
+			this.items.TabStop = true;
 			this.items.Visible = false;
-			this.items.VisibleChanged += new System.EventHandler(this.items_VisibleChanged);
 			this.items.ControlAdded += new Wisej.Web.ControlEventHandler(this.items_ControlAdded);
 			this.items.ControlRemoved += new Wisej.Web.ControlEventHandler(this.items_ControlRemoved);
 			// 
@@ -158,7 +156,6 @@
 			this.Spacing = 0;
 			this.header.ResumeLayout(false);
 			this.header.PerformLayout();
-			this.Click += new System.EventHandler(this.NavigationBarItem_Click);
 			((System.ComponentModel.ISupportInitialize)(this.icon)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.shortcut)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.open)).EndInit();

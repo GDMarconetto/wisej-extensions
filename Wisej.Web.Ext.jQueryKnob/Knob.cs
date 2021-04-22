@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using Wisej.Core;
 using Wisej.Design;
 
@@ -353,6 +354,8 @@ namespace Wisej.Web.Ext.jQueryKnob
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			get
 			{
 				if (base.Packages.Count == 0)
@@ -374,6 +377,8 @@ namespace Wisej.Web.Ext.jQueryKnob
 			}
 		}
 
+		// disable inlining or we lose the calling assembly in GetResourceString().
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		private string BuildInitScript()
 		{
 			IWisejControl me = this;

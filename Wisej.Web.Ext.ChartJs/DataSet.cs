@@ -132,6 +132,39 @@ namespace Wisej.Web.Ext.ChartJS
 			set;
 		}
 
+		/// <summary>
+		/// Binds the <see cref="DataSet"/> to the specified y axis
+		/// </summary>
+		[DefaultValue("")]
+		[Description("Binds the dataset to the specified y axis")]
+		public String yAxisID
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
+		/// Binds the <see cref="DataSet"/> to the specified x axis
+		/// </summary>
+		[DefaultValue("")]
+		[Description("Binds the dataset to the specified x axis")]
+		public String xAxisID
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
+		/// The drawing order of the dataset. Also affects order for stacking, tooltip, and legend.
+		/// </summary>
+		[DefaultValue(0)]
+		[Description("The drawing order of the dataset. Also affects order for stacking, tooltip, and legend.")]
+		public int Order
+		{
+			get;
+			set;
+		}
+
 		// Initializes this data set copying the value from another data set.
 		internal virtual void CopyFrom(DataSet source)
 		{
@@ -332,6 +365,18 @@ namespace Wisej.Web.Ext.ChartJS
 			get;
 			set;
 		}
+
+		/// <summary>
+		/// Bezier curve tension of the line. Set to 0 to draw straight lines. This option is ignored if monotone cubic interpolation is used.
+		/// </summary>
+		[DefaultValue(0.4)]
+		[MergableProperty(false)]
+		[Description("Bezier curve tension of the line. Set to 0 to draw straight lines. This option is ignored if monotone cubic interpolation is used.")]
+		public double LineTension 
+		{ 
+			get; 
+			set; 
+		} = 0.4;
 	}
 
 	/// <summary>
@@ -388,7 +433,6 @@ namespace Wisej.Web.Ext.ChartJS
 			get;
 			set;
 		}
-
 	}
 
 	/// <summary>
@@ -584,6 +628,18 @@ namespace Wisej.Web.Ext.ChartJS
 		public RadarDataSet() : base()
 		{
 			this.Type = ChartType.Radar;
+		}
+
+		/// <summary>
+		/// Bezier curve tension of the line. Set to 0 to draw straight lines.
+		/// </summary>
+		[DefaultValue(0)]
+		[MergableProperty(false)]
+		[Description("Bezier curve tension of the line. Set to 0 to draw straight lines.")]
+		public double LineTension
+		{
+			get;
+			set;
 		}
 	}
 }

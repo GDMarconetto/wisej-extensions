@@ -14,6 +14,15 @@
  */
 this.init = function () {
 
+	// destroy the previous instance, ckEditor cannot be altered after creation.
+	if (this.editor) {
+
+		this.editor.removeAllListeners();
+		this.setDirty(false);
+		this.editor.destroy();
+		this.editor = null;
+	}
+
 	var me = this;
 
 	// get the unique editor id.
@@ -31,10 +40,6 @@ this.init = function () {
 	config.removePlugins = config.removePlugins || "";
 	CKEDITOR_BASEPATH = options.basePath;
 
-	// hide the toolbar.
-	if (!options.showToolbar)
-		config.removePlugins += ",toolbar";
-
 	// hide the status bar.
 	if (!options.showFooter)
 		config.removePlugins += ",elementspath";
@@ -51,25 +56,13 @@ this.init = function () {
 	if (options.externalPlugins)
 		this.__registerPlugins(options.externalPlugins);
 
-	// destroy the previous instance, tinyMCE cannot be altered after creation.
-	if (this.editor) {
+	// resize the tinyMCE editor when the widget is resized.
+	this.addListener("resize", function (e) {
+		this.__resizeEditor();
+	}, this);
 
-		this.editor.destroy();
-		this.editor = null;
-
-	}
-	else {
-
-		// perform stuff that has to be done only once.
-
-		// resize the tinyMCE editor when the widget is resized.
-		this.addListener("resize", function (e) {
-			this.__resizeEditor();
-		}, this);
-
-		// add the text property to the state variables returned to the server with any event.
-		this.setStateProperties(this.getStateProperties().concat(["text"]));
-	}
+	// add the text property to the state variables returned to the server with any event.
+	this.setStateProperties(this.getStateProperties().concat(["text"]));
 
 	// create the editor instance.
 	me.editor = CKEDITOR.replace(id, config);
@@ -80,6 +73,10 @@ this.init = function () {
 		// resize it to fit the container.
 		me.__resizeEditor();
 
+		// hide the toolbar.
+		if (!options.showToolbar)
+			me.hideToolbar();
+			
 		// inform the server widget that the editor is ready.
 		me.fireWidgetEvent("load");
 
@@ -110,11 +107,9 @@ this.init = function () {
 
 		// skip "applyFormatting", it's generated too often.
 		if (e.data && e.data.name != "applyFormatting") {
-			var name = e.data.name;
 			me.fireWidgetEvent("command", e.data.name);
 		}
 	});
-
 }
 
 /**
@@ -124,13 +119,36 @@ this.init = function () {
  */
 this.getText = function () {
 	try {
-		return this.editor.getData();
+		if (this.editor)
+			return this.editor.getData();
 	} catch (e) { }
 }
 this.setText = function (value) {
 	try {
-		this.editor.setData(value);
-		this.updateState();
+		var me = this;
+		me.editor.setData("", {
+			callback: function () {
+				var readOnly = me.editor.readOnly;
+				if (readOnly)
+					me.editor.setReadOnly(false);
+
+				me.editor.insertHtml(value);
+
+				if (readOnly)
+					me.editor.setReadOnly(true);
+
+				me.updateState();
+			}
+		});
+
+	} catch (e) { }
+}
+
+// applies the read only state.
+this.setReadOnly = function (value) {
+	try {
+		if (this.editor.readOnly != value)
+			this.editor.setReadOnly(value);
 	} catch (e) { }
 }
 
@@ -159,7 +177,8 @@ this.__resizeEditor = function (second_pass) {
 
 	var me = this;
 	var insets = me.getInsets();
-	this.editor.resize(me.getWidth() - insets.left - insets.right, me.getHeight(), false);
+	if (this.editor)
+		this.editor.resize(me.getWidth() - insets.left - insets.right, me.getHeight(), false);
 }
 
 // Registers the external plugins with the CKEditor library.
@@ -262,4 +281,21 @@ this.tabFocus = function () {
 this.focus = function () {
 	if (this.editor)
 		this.editor.focus();
+}
+
+/**
+ * Hides the toolbar.
+ */
+this.hideToolbar = function () {
+	if (!this.editor) {
+		var me = this;
+		this.addListenerOnce("initialized", function () {
+			me.hideToolbar();
+		});
+		return;
+	}
+
+	this.getContentElement().getDomElement().getElementsByClassName("cke_top")[0].style.display = "none"
+
+	this.__resizeEditor();
 }

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Wisej.Core;
 using Wisej.Design;
 
@@ -1416,8 +1417,9 @@ namespace Wisej.Web.Ext.FullCalendar
 				var ev = this.Events[id];
 				if (ev != null)
 				{
-					int x = data.x ?? 0;
-					int y = data.y ?? 0;
+					// verify x and y are integers.
+					int x = Convert.ToInt32(data.x);
+					int y = Convert.ToInt32(data.y);
 					var location = PointToClient(new Point(x, y));
 					MouseButtons button = GetMouseButton(data.button ?? 0);
 
@@ -1531,6 +1533,8 @@ namespace Wisej.Web.Ext.FullCalendar
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			get
 			{
 				if (base.Packages.Count == 0)

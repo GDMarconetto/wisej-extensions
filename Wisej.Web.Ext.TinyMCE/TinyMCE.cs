@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Wisej.Base;
 using Wisej.Core;
 using Wisej.Design;
@@ -375,7 +376,7 @@ namespace Wisej.Web.Ext.TinyMCE
 			get { return _baseUrl; }
 			set { _baseUrl = value; }
 		}
-		private static string _baseUrl = "https://cdn.tinymce.com/4/";
+		private static string _baseUrl = "https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.9.11/";
 
 		/// <summary>
 		/// Overridden to return our list of script resources.
@@ -399,6 +400,8 @@ namespace Wisej.Web.Ext.TinyMCE
 			}
 		}
 
+		// disable inlining or we lose the calling assembly in GetResourceString().
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		private string BuildInitScript()
 		{
 			IWisejControl me = this;

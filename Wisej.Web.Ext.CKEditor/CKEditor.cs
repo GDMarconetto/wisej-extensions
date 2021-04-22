@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Wisej.Base;
 using Wisej.Core;
 using Wisej.Design;
@@ -95,6 +96,27 @@ namespace Wisej.Web.Ext.CKEditor
 			}
 		}
 		private string _text = "";
+
+		/// <summary>
+		/// Returns or sets whether the user can interact with the editor.
+		/// </summary>
+		[DesignerActionList]
+		[DefaultValue(false)]
+		[Description("Returns or sets whether the user can interact with the editor.")]
+		public bool ReadOnly
+		{
+			get { return this._readOnly; }
+
+			set
+			{
+				if (this._readOnly != value)
+				{
+					this._readOnly = value;
+					Call("setReadOnly", value);
+				}
+			}
+		}
+		private bool _readOnly = false;
 
 		/// <summary>
 		/// Shows or hides the toolbar panel.
@@ -364,6 +386,8 @@ namespace Wisej.Web.Ext.CKEditor
 			}
 		}
 
+		// disable inlining or we lose the calling assembly in GetResourceString().
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		private string BuildInitScript()
 		{
 			IWisejControl me = this;
@@ -410,13 +434,11 @@ namespace Wisej.Web.Ext.CKEditor
 			switch (e.Type)
 			{
 				case "load":
-					this.initialized = true;
-					if (!String.IsNullOrEmpty(this.Text))
-						Call("setText", TextUtils.EscapeText(this.Text, true));
+					ProcessLoadEvent();
 					break;
-
+					
 				case "changeText":
-					this.Text = e.Data ?? "";
+					this._text = e.Data ?? "";
 					break;
 
 				case "command":
@@ -429,6 +451,17 @@ namespace Wisej.Web.Ext.CKEditor
 
 			}
 			base.OnWidgetEvent(e);
+		}
+
+		// processes the initialization event from the client.
+		private void ProcessLoadEvent()
+		{
+			this.initialized = true;
+
+			if (!String.IsNullOrEmpty(this.Text))
+				Call("setText", TextUtils.EscapeText(this.Text, true));
+
+			Call("setReadOnly", this.ReadOnly);
 		}
 
 		// Handles the "focus" event from the client.

@@ -25,7 +25,6 @@ using System.Drawing;
 using System.Drawing.Design;
 using System.Security.Cryptography;
 using System.Text;
-using System.Windows.Forms;
 using Wisej.Base;
 using Wisej.Core;
 using Wisej.Design;
@@ -81,6 +80,12 @@ namespace Wisej.Web.Ext.NavigationBar
 		public event EventHandler CompactViewChanged;
 
 		/// <summary>
+		/// Fired when the value of the property <see cref="SelectedItem"/> changes.
+		/// </summary>
+		[Description("Fired when the value of the property SelectedItem changes.")]
+		public event EventHandler SelectedItemChanged;
+
+		/// <summary>
 		/// Fires the <see cref="TitleClick"/> event.
 		/// </summary>
 		/// <param name="e">Not used.</param>
@@ -110,15 +115,62 @@ namespace Wisej.Web.Ext.NavigationBar
 		/// <summary>
 		/// Fires the <see cref="CompactViewChanged"/> event.
 		/// </summary>
-		/// <param name="e">Not used.</param>
+		/// <param name="e">A <see cref="NavigationBarItemClickEventArgs"/> containing the event data.</param>
 		protected virtual void OnItemClick(NavigationBarItemClickEventArgs e)
 		{
 			this.ItemClick?.Invoke(this, e);
 		}
 
+		/// <summary>
+		/// Fires the <see cref="SelectedItemChanged"/> event.
+		/// </summary>
+		/// <param name="e">Not used.</param>
+		protected virtual void OnSelectedItemChanged(EventArgs e)
+		{
+			this.SelectedItemChanged?.Invoke(this, e);
+		}
+
 		#endregion
 
 		#region Properties
+
+		/// <summary>
+		/// Returns or sets the selected item.
+		/// </summary>
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public NavigationBarItem SelectedItem
+		{
+			get { return this._selectedItem; }
+			set {
+
+				if (value != null && value.NavigationBar != this)
+					throw new ArgumentException("The NavigationBarItem doesn't belong to this NavigationBar.");
+
+				if (this._selectedItem != value)
+				{
+					if (this._selectedItem != null)
+						this._selectedItem.Selected = false;
+
+					this._selectedItem = value;
+
+					if (this._selectedItem != null)
+						this._selectedItem.Selected = true;
+
+					// expand all parents.
+					if (this._selectedItem != null)
+					{
+						for (var parent = this._selectedItem.Parent; parent != null; parent = parent.Parent)
+						{
+							parent.Expanded = true;
+						}
+					}
+
+					OnSelectedItemChanged(EventArgs.Empty);
+				}
+			}
+		}
+		private NavigationBarItem _selectedItem;
 
 		/// <summary>
 		/// Returns or sets the compact view mode.
@@ -143,7 +195,7 @@ namespace Wisej.Web.Ext.NavigationBar
 						this._savedWidth = this.Width;
 						this._savedAvatarSize = this.avatar.Size;
 
-						this.Width = this.logo.Right + this.logo.Left;
+						this.Width = this.CompactViewWidth;
 						this.avatar.Size = this.avatar.MaximumSize = this.logo.Size;
 					}
 					else if (this._savedWidth > 0)
@@ -159,6 +211,40 @@ namespace Wisej.Web.Ext.NavigationBar
 		private bool _compactView;
 		private int _savedWidth = 0;
 		private Size _savedAvatarSize = Size.Empty;
+
+		private int CompactViewWidth
+		{
+			get
+			{
+				return this.logo.Right + this.logo.Left;
+			}
+		}
+
+		/// <summary>
+		/// Returns or sets the indentation in pixels for child items.
+		/// </summary>
+		[ResponsiveProperty]
+		[DefaultValue(0)]
+		public int Indentation
+		{
+			get { return this._indentation; }
+			set
+			{
+				if (this._indentation != value)
+				{
+					this._indentation = value;
+
+					if (this._items != null)
+					{
+						foreach (var i in this.Items)
+						{
+							i.UpdateIndentation();
+						}
+					}
+				}
+			}
+		}
+		private int _indentation = 0;
 
 		/// <summary>
 		/// Returns or sets the logo to display in the <see cref="NavigationBar"/>.
@@ -275,6 +361,36 @@ namespace Wisej.Web.Ext.NavigationBar
 			((NavigationBarItem)e.Control).ItemHeight = this.ItemHeight;
 		}
 
+		/// <summary>
+		/// Allows the user to change the <see cref="SelectedItem"/> using the keyboard.
+		/// </summary>
+		[DefaultValue(false)]
+		public bool EnableKeyboardNavigation
+		{
+			get { return this._enableKeyboardNavigation; }
+			set
+			{
+				if (this._enableKeyboardNavigation != value)
+				{
+					this._enableKeyboardNavigation = value;
+
+					if (value)
+					{
+						this.Focusable = true;
+						this.KeyDown += this.NavigationBar_KeyDown;
+						this.KeyPress += this.NavigationBar_KeyPress;
+					}
+					else
+					{
+						this.Focusable = true;
+						this.KeyDown -= this.NavigationBar_KeyDown;
+						this.KeyPress -= this.NavigationBar_KeyPress;
+					}
+				}
+			}
+		}
+		private bool _enableKeyboardNavigation = false;
+
 		#endregion
 
 		#region Methods
@@ -338,11 +454,6 @@ namespace Wisej.Web.Ext.NavigationBar
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override ComponentToolCollection Tools => base.Tools;
-		/// <exclude/>
-		[Browsable(false)]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override int TabIndex { get => base.TabIndex; set { } }
 		/// <exclude/>
 		[Browsable(false)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
@@ -484,11 +595,122 @@ namespace Wisej.Web.Ext.NavigationBar
 
 		#endregion
 
+		private void NavigationBar_KeyDown(object sender, KeyEventArgs e)
+		{
+			switch (e.KeyCode)
+			{
+				case Keys.Up:
+					this.SelectedItem = GetPreviousItem(this.SelectedItem, true);
+					break;
+
+				case Keys.Down:
+					this.SelectedItem = GetNextItem(this.SelectedItem, true);
+					break;
+
+				case Keys.Right:
+					if (this.SelectedItem?.Items.Count > 0)
+						this.SelectedItem = this.SelectedItem.Items[0];
+					break;
+
+				case Keys.Left:
+					if (this.SelectedItem?.Parent != null)
+						this.SelectedItem = this.SelectedItem?.Parent;
+					break;
+
+				case Keys.Home:
+					if (this.Items.Count > 0)
+						this.SelectedItem = this.Items[0];
+					break;
+
+				case Keys.End:
+					if (this.Items.Count > 0)
+						this.SelectedItem = this.Items[this.Items.Count - 1];
+					break;
+
+				case Keys.Space:
+				case Keys.Enter:
+					if (this.SelectedItem != null)
+						this.SelectedItem.Expanded = !this.SelectedItem.Expanded;
+					break;
+			}
+		}
+
+		private void NavigationBar_KeyPress(object sender, KeyPressEventArgs e)
+		{
+			switch (e.KeyChar)
+			{
+				case '-':
+					if (this.SelectedItem != null)
+						this.SelectedItem.Expanded = false;
+					break;
+
+				case '+':
+					if (this.SelectedItem != null)
+						this.SelectedItem.Expanded = true;
+					break;
+			}
+		}
+
+		private NavigationBarItem GetPreviousItem(NavigationBarItem selectedItem, bool deep)
+		{
+			if (selectedItem != null)
+			{
+				var items = selectedItem.Parent?.Items ?? this.Items;
+				if (items != null)
+				{
+					var index = items.IndexOf(selectedItem) - 1;
+					if (index > -1)
+					{
+						selectedItem = items[index];
+						while (deep && selectedItem.Expanded && selectedItem.Items?.Count > 0)
+						{
+							selectedItem = selectedItem.Items[selectedItem.Items.Count - 1];
+						}
+					}
+					else
+					{
+						selectedItem = selectedItem.Parent;
+					}
+				}
+			}
+
+			if (selectedItem == null && this.Items.Count > 0)
+				selectedItem = this.Items[this.Items.Count - 1];
+
+			return selectedItem;
+		}
+
+		private NavigationBarItem GetNextItem(NavigationBarItem selectedItem, bool deep)
+		{
+			if (selectedItem != null)
+			{
+				if (deep && selectedItem.Expanded && selectedItem.Items?.Count > 0)
+					return selectedItem.Items[0];
+
+				var items = selectedItem.Parent?.Items ?? this.Items;
+				if (items != null)
+				{
+					var index = items.IndexOf(selectedItem) + 1;
+					if (index < items.Count)
+						return items[index];
+
+					return GetNextItem(selectedItem.Parent, false);
+				}
+			}
+
+			if (selectedItem == null && this.Items.Count > 0)
+				selectedItem = this.Items[0];
+
+			return selectedItem;
+		}
+
 		internal void FireItemClick(NavigationBarItem item)
 		{
 			Debug.Assert(item != null);
 
 			OnItemClick(new NavigationBarItemClickEventArgs(item));
+
+			this.SelectedItem = item;
 		}
 
 		private void user_Click(object sender, EventArgs e)
@@ -566,6 +788,14 @@ namespace Wisej.Web.Ext.NavigationBar
 			return false;
 		}
 
+		protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+		{
+			if (this.CompactView)
+				width = this.CompactViewWidth;
+
+			base.SetBoundsCore(x, y, width, height, specified);
+		}
+
 		private void OnDesignComponentSelectionChanged(object server, EventArgs e)
 		{
 			IWisejComponent target = this.DesignItem;
@@ -575,12 +805,14 @@ namespace Wisej.Web.Ext.NavigationBar
 				if (selectionService != null)
 				{
 					if (selectionService.GetComponentSelected(this))
-						selectionService.SetSelectedComponents(new[] { target });
+					{
+						this.DesignItem = null;
+						selectionService.SetSelectedComponents(new[] { target }, SelectionTypes.Replace);
+					}
 				}
 			}
 		}
 
 		#endregion
-
 	}
 }

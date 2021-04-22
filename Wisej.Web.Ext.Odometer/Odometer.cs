@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using Wisej.Core;
 using Wisej.Design;
 
@@ -624,35 +625,50 @@ namespace Wisej.Web.Ext.Odometer
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override string InitScript
 		{
-			get { return BuildInitScript(); }
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get { return GetResourceString("Wisej.Web.Ext.Odometer.JavaScript.startup.js"); }
 			set { }
 		}
 
-		private string BuildInitScript()
+		/// <summary>
+		/// Overridden.
+		/// </summary>
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public override dynamic Options
 		{
+			get
+			{
+				dynamic options = new DynamicObject();
 
-			dynamic options = new DynamicObject();
-			string script = GetResourceString("Wisej.Web.Ext.Odometer.JavaScript.startup.js");
-
-			options.theme = TranslateSkinName(this.Skin);
-			options.value = this.Value;
-			options.duration = this.Duration;
-			options.fontSize = this.FontSize;
-
-			script = script.Replace("$options", options.ToString());
-			return script;
+				options.theme = TranslateSkinName(this.Skin);
+				options.value = this.Value;
+				options.duration = this.Duration;
+				options.fontSize = this.FontSize;
+				return options;
+			}
+			set { }
 		}
 
 		private string TranslateSkinName(OdometerSkin skin)
 		{
 			switch (skin)
 			{
+				case OdometerSkin.Default:
+					return "default";
+				case OdometerSkin.Car:
+					return "car";
+				case OdometerSkin.Digital:
+					return "digital";
+				case OdometerSkin.Minimal:
+					return "minimal";
+				case OdometerSkin.Plaza:
+					return "plaza";
 				case OdometerSkin.SlotMachine:
 					return "slot-machine";
-
 				case OdometerSkin.TrainStation:
 					return "train-station";
-
 				default:
 					return skin.ToString().ToLower();
 			}
@@ -665,6 +681,8 @@ namespace Wisej.Web.Ext.Odometer
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			get
 			{
 				if (base.Packages.Count == 0)
@@ -675,6 +693,15 @@ namespace Wisej.Web.Ext.Odometer
 						Name = "odometer",
 						Source = GetResourceURL("Wisej.Web.Ext.Odometer.JavaScript.odometer.js")
 					});
+
+					foreach (OdometerSkin skin in Enum.GetValues(typeof(OdometerSkin)))
+					{
+						base.Packages.Add(new Package()
+						{
+							Name = $"odometer-theme-{skin}",
+							Source = GetResourceURL($"Wisej.Web.Ext.Odometer.Resources.odometer-theme-{TranslateSkinName(skin)}.css")
+						});
+					}
 				}
 
 				return base.Packages;

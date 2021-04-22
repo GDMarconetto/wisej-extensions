@@ -100,6 +100,64 @@ namespace Wisej.Web.Ext.NavigationBar
 			this.Collapse?.Invoke(this, e);
 		}
 
+		#region Redirect pointer events from the header panel
+
+		public new event EventHandler Click
+		{
+			add { this.header.Click += value; }
+			remove { this.header.Click -= value; }
+		}
+
+		public new event EventHandler Tap
+		{
+			add { this.header.Tap += value; }
+			remove { this.header.Tap -= value; }
+		}
+
+		public new event EventHandler LongTap
+		{
+			add { this.header.LongTap += value; }
+			remove { this.header.LongTap -= value; }
+		}
+
+		public new event SwipeEventHandler Swipe
+		{
+			add { this.header.Swipe += value; }
+			remove { this.header.Swipe -= value; }
+		}
+
+		public new event MouseEventHandler MouseClick
+		{
+			add { this.header.MouseClick += value; }
+			remove { this.header.MouseClick -= value; }
+		}
+
+		public new event MouseEventHandler MouseDown
+		{
+			add { this.header.MouseDown += value; }
+			remove { this.header.MouseDown -= value; }
+		}
+
+		public new event MouseEventHandler MouseUp
+		{
+			add { this.header.MouseUp += value; }
+			remove { this.header.MouseUp -= value; }
+		}
+
+		public new event EventHandler MouseEnter
+		{
+			add { this.header.MouseEnter += value; }
+			remove { this.header.MouseEnter -= value; }
+		}
+
+		public new event EventHandler MouseLeave
+		{
+			add { this.header.MouseLeave += value; }
+			remove { this.header.MouseLeave -= value; }
+		}
+
+		#endregion
+
 		#endregion
 
 		#region Properties
@@ -115,7 +173,7 @@ namespace Wisej.Web.Ext.NavigationBar
 			{
 				if (this._navbar == null)
 				{
-					for (var parent = this.Parent; parent != null; parent = parent.Parent)
+					for (var parent = base.Parent; parent != null; parent = parent.Parent)
 					{
 						if (parent is NavigationBar)
 						{
@@ -129,6 +187,25 @@ namespace Wisej.Web.Ext.NavigationBar
 			}
 		}
 		private NavigationBar _navbar;
+
+		/// <summary>
+		/// Returns the parent <see cref="NavigationBarItem"/> or null.
+		/// </summary>
+		[Browsable(false)]
+		public new NavigationBarItem Parent
+		{
+			get
+			{
+				for (var parent = base.Parent; parent != null; parent = parent.Parent)
+				{
+					if (parent is NavigationBarItem)
+					{
+						return (NavigationBarItem)parent;
+					}
+				}
+				return null;
+			}
+		}
 
 		/// <summary>
 		/// Returns or sets the icon of the <see cref="NavigationBarItem"/>.
@@ -181,10 +258,10 @@ namespace Wisej.Web.Ext.NavigationBar
 
 		private bool ShouldSerializeBackColor()
 		{
-			return this.header.BackColor.Name != "@navbar-background";
+			return this.header.BackColor != Color.Transparent;
 		}
 
-		private new void ResetBackColor()
+		public override void ResetBackColor()
 		{
 			this.header.BackColor = Color.Empty;
 		}
@@ -202,13 +279,25 @@ namespace Wisej.Web.Ext.NavigationBar
 
 		private bool ShouldSerializeForeColor()
 		{
-			return this.header.ForeColor.Name != "@navbar-text";
+			return TypeDescriptor.GetProperties(this.header)["ForeColor"].ShouldSerializeValue(this.header);
 		}
 
-		private new void ResetForeColor()
+		public override void ResetForeColor()
 		{
-			this.header.ForeColor = Color.Empty;
+			TypeDescriptor.GetProperties(this.header)["ForeColor"].ResetValue(this.header);
 		}
+
+		/// <summary>
+		/// Determines whether to expand or collapse the item when clicking the item rather than
+		/// having to click the open/close icon.
+		/// </summary>
+		[DefaultValue(true)]
+		public bool ExpandOnClick
+		{
+			get { return this._expandOnClick; }
+			set { this._expandOnClick = value; }
+		}
+		private bool _expandOnClick = true;
 
 		/// <summary>
 		/// Expands or collapses child items.
@@ -216,13 +305,61 @@ namespace Wisej.Web.Ext.NavigationBar
 		[DefaultValue(false)]
 		public bool Expanded
 		{
-			get => this.items.Visible;
+			get => this._expanded;
 			set
 			{
-				if (this.items.Controls.Count > 0)
+				if (this._expanded != value)
+				{
+					this._expanded = value;
 					this.items.Visible = value;
+
+					if (this.Expanded)
+					{
+						OnExpand(EventArgs.Empty);
+						this.open.AddState("open");
+					}
+					else
+					{
+						OnCollapse(EventArgs.Empty);
+						this.open.RemoveState("open");
+					}
+				}
+			}
+		}
+		private bool _expanded;
+
+		/// <summary>
+		/// Returns the indentation level of this <see cref="NavigationBarItem"/> item.
+		/// </summary>
+		[Browsable(false)]
+		public int Level
+		{
+			get
+			{
+				var level = 0;
+				for (var parent = this.Parent; parent != null; parent = parent.Parent)
+				{
+					level++;
+				}
+				return level;
+			}
+		}
+
+		/// <summary>
+		/// Returns whether the <see cref="NavigationBarItem"/> is the currently selected item.
+		/// </summary>
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool Selected
+		{
+			get => this.header.HasState("selected");
+			internal set
+			{
+				if (value)
+					this.header.AddState("selected");
 				else
-					this.items.Visible = false;
+					this.header.RemoveState("selected");
 			}
 		}
 
@@ -270,12 +407,12 @@ namespace Wisej.Web.Ext.NavigationBar
 
 		private bool ShouldSerializeInfoTextForeColor()
 		{
-			return this.info.ForeColor.Name != "@navbar-text";
+			return TypeDescriptor.GetProperties(this.info)["ForeColor"].ShouldSerializeValue(this.info);
 		}
 
 		private void ResetInfoTextForeColor()
 		{
-			this.info.ForeColor = Color.Empty;
+			TypeDescriptor.GetProperties(this.info)["ForeColor"].ResetValue(this.info);
 		}
 
 		/// <summary>
@@ -334,6 +471,27 @@ namespace Wisej.Web.Ext.NavigationBar
 		#endregion
 
 		#region Implementation
+
+		internal void UpdateIndentation()
+		{
+			if (this.NavigationBar != null)
+			{
+				var level = this.Level + 1;
+				var padding = new Padding(this.NavigationBar.Indentation * level, 0, 0, 0);
+				foreach (NavigationBarItem i in this.items.Controls)
+				{
+					i.icon.Margin = padding;
+				}
+
+				if (this._items != null)
+				{
+					foreach (var i in this.Items)
+					{
+						i.UpdateIndentation();
+					}
+				}
+			}
+		}
 
 		#region Unsupported properties and events
 
@@ -583,6 +741,7 @@ namespace Wisej.Web.Ext.NavigationBar
 
 		protected override void OnParentChanged(EventArgs e)
 		{
+			// sync the CompactView mode with the parent NavigationBar.
 			if (this._navbar != null)
 			{
 				this._navbar.CompactViewChanged -= this.Navbar_CompactViewChanged;
@@ -636,23 +795,16 @@ namespace Wisej.Web.Ext.NavigationBar
 			OnInfoClick(e);
 		}
 
-		private void items_VisibleChanged(object sender, EventArgs e)
-		{
-			if (this.items.Visible)
-			{
-				OnExpand(e);
-				this.open.AddState("open");
-			}
-			else
-			{
-				OnCollapse(e);
-				this.open.RemoveState("open");
-			}
-		}
-
-		private void NavigationBarItem_Click(object sender, EventArgs e)
+		private void open_Click(object sender, EventArgs e)
 		{
 			this.Expanded = !this.Expanded;
+		}
+
+		private void header_Click(object sender, EventArgs e)
+		{
+			if (this.ExpandOnClick)
+				this.Expanded = !this.Expanded;
+
 			this.NavigationBar?.FireItemClick(this);
 		}
 
@@ -663,6 +815,8 @@ namespace Wisej.Web.Ext.NavigationBar
 
 			if (this.NavigationBar != null)
 				((NavigationBarItem)e.Control).ItemHeight = this.NavigationBar.ItemHeight;
+
+			UpdateIndentation();
 		}
 
 		private void items_ControlRemoved(object sender, ControlEventArgs e)

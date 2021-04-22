@@ -209,9 +209,12 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 
 			lock (grid.Rows)
 			{
+				var groups = FindSummaryGroups(grid, summaryPosition, groupFromCol, groupToCol);
+				if (groups.Length == 0)
+					groups = CollectSummaryGroups(grid, summaryPosition, groupFromCol, groupToCol);
+
 				// calculate the specified aggregates.
 				var summaryRows = new List<DataGridViewSummaryRow>();
-				var groups = GetSummaryGroups(grid, summaryPosition, groupFromCol, groupToCol);
 				if (groups.Length > 0)
 				{
 					for (int i = 0; i < groups.Length; i++)
@@ -376,7 +379,11 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 				if (value == null || Convert.IsDBNull(value))
 					continue;
 
-				result += (Decimal)Convert.ChangeType(value, typeof(Decimal));
+				try
+				{
+					result += (Decimal)Convert.ChangeType(value, typeof(Decimal));
+				}
+				catch { }
 			}
 
 			return result;
@@ -399,8 +406,12 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 				if (value == null || Convert.IsDBNull(value))
 					continue;
 
-				anyValue = true;
-				result = Math.Min(result, (Decimal)Convert.ChangeType(value, typeof(Decimal)));
+				try
+				{
+					result = Math.Min(result, (Decimal)Convert.ChangeType(value, typeof(Decimal)));
+					anyValue = true;
+				}
+				catch { }
 			}
 
 			if (!anyValue)
@@ -426,8 +437,12 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 				if (value == null || Convert.IsDBNull(value))
 					continue;
 
-				anyValue = true;
-				result = Math.Max(result, (Decimal)Convert.ChangeType(value, typeof(Decimal)));
+				try
+				{
+					result = Math.Max(result, (Decimal)Convert.ChangeType(value, typeof(Decimal)));
+					anyValue = true;
+				}
+				catch { }
 			}
 
 			if (!anyValue)
@@ -476,9 +491,13 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 				if (value == null || Convert.IsDBNull(value))
 					continue;
 
-				anyValue = true;
-				count++;
-				result += (Decimal)Convert.ChangeType(value, typeof(Decimal));
+				try
+				{
+					result += (Decimal)Convert.ChangeType(value, typeof(Decimal));
+					count++;
+					anyValue = true;
+				}
+				catch { }
 			}
 
 			if (!anyValue)
@@ -506,10 +525,14 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 				if (value == null || Convert.IsDBNull(value))
 					continue;
 
-				anyValue = true;
-				count++;
-				values.Add((Decimal)Convert.ChangeType(value, typeof(Decimal)));
-				result += values[values.Count - 1];
+				try
+				{
+					values.Add((Decimal)Convert.ChangeType(value, typeof(Decimal)));
+					count++;
+					anyValue = true;
+					result += values[values.Count - 1];
+				}
+				catch { }
 			}
 
 			if (!anyValue)
@@ -572,6 +595,17 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 			{
 				summaryRow[summaryCol].Value = value;
 			}
+		}
+
+		private static DataGridViewRow[][] FindSummaryGroups(
+			DataGridView grid, 
+			SummaryRowPosition position, 
+			DataGridViewColumn groupFrom, 
+			DataGridViewColumn groupTo)
+		{
+			return grid.Rows
+				.Where(r => (r as DataGridViewSummaryRow)?.Match(null, position, groupFrom, groupTo) ?? false)
+				.Select(r => ((DataGridViewSummaryRow)r).GroupRows).ToArray();
 		}
 
 		private static DataGridViewSummaryRow RetrieveSummaryRow(
@@ -686,7 +720,7 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 			return index;
 		}
 
-		private static DataGridViewRow[][] GetSummaryGroups(DataGridView grid, SummaryRowPosition position, DataGridViewColumn groupFrom, DataGridViewColumn groupTo)
+		private static DataGridViewRow[][] CollectSummaryGroups(DataGridView grid, SummaryRowPosition position, DataGridViewColumn groupFrom, DataGridViewColumn groupTo)
 		{
 			List<DataGridViewRow> group = new List<DataGridViewRow>();
 			List<DataGridViewRow[]> groups = new List<DataGridViewRow[]>();
@@ -695,8 +729,8 @@ namespace Wisej.Web.Ext.DataGridViewSummaryRow
 			DataGridViewRow groupRow = null;
 			foreach (DataGridViewRow r in rows)
 			{
-				// skip hidden rows
-				if (!r.Visible)
+				// skip hidden rows that are not a child row.
+				if (!r.Visible && !r.IsChild)
 					continue;
 
 				if (r is DataGridViewSummaryRow)

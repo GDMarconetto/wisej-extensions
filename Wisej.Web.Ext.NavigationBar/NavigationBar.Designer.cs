@@ -1,4 +1,6 @@
-﻿namespace Wisej.Web.Ext.NavigationBar
+﻿using System;
+
+namespace Wisej.Web.Ext.NavigationBar
 {
 	partial class NavigationBar
 	{
@@ -59,8 +61,9 @@
 			this.header.Margin = new Wisej.Web.Padding(0);
 			this.header.Name = "header";
 			this.header.Padding = new Wisej.Web.Padding(20, 0, 20, 0);
-			this.header.Size = new System.Drawing.Size(320, 64);
+			this.header.Size = new System.Drawing.Size(282, 64);
 			this.header.TabIndex = 0;
+			this.header.TabStop = true;
 			this.header.Click += new System.EventHandler(this.header_Click);
 			// 
 			// logo
@@ -71,7 +74,6 @@
 			this.logo.Name = "logo";
 			this.logo.Size = new System.Drawing.Size(24, 24);
 			this.logo.SizeMode = Wisej.Web.PictureBoxSizeMode.Zoom;
-			this.logo.TabIndex = 0;
 			// 
 			// title
 			// 
@@ -81,7 +83,7 @@
 			this.title.Font = new System.Drawing.Font("defaultBold", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
 			this.title.Location = new System.Drawing.Point(63, 3);
 			this.title.Name = "title";
-			this.title.Size = new System.Drawing.Size(234, 58);
+			this.title.Size = new System.Drawing.Size(196, 58);
 			this.title.TabIndex = 1;
 			this.title.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
@@ -91,12 +93,13 @@
 			this.user.Controls.Add(this.userInfo);
 			this.user.Cursor = Wisej.Web.Cursors.Hand;
 			this.user.LayoutStyle = Wisej.Web.FlexLayoutStyle.Horizontal;
-			this.user.Location = new System.Drawing.Point(0, 329);
+			this.user.Location = new System.Drawing.Point(0, 506);
 			this.user.Margin = new Wisej.Web.Padding(0);
 			this.user.Name = "user";
 			this.user.Padding = new Wisej.Web.Padding(20, 12, 20, 12);
-			this.user.Size = new System.Drawing.Size(320, 72);
+			this.user.Size = new System.Drawing.Size(282, 72);
 			this.user.TabIndex = 1;
+			this.user.TabStop = true;
 			this.user.Click += new System.EventHandler(this.user_Click);
 			// 
 			// avatar
@@ -109,7 +112,6 @@
 			this.avatar.Name = "avatar";
 			this.avatar.Size = new System.Drawing.Size(40, 40);
 			this.avatar.SizeMode = Wisej.Web.PictureBoxSizeMode.Zoom;
-			this.avatar.TabIndex = 0;
 			// 
 			// userInfo
 			// 
@@ -120,9 +122,10 @@
 			this.userInfo.LayoutStyle = Wisej.Web.FlexLayoutStyle.Vertical;
 			this.userInfo.Location = new System.Drawing.Point(79, 15);
 			this.userInfo.Name = "userInfo";
-			this.userInfo.Size = new System.Drawing.Size(218, 42);
+			this.userInfo.Size = new System.Drawing.Size(180, 42);
 			this.userInfo.Spacing = 0;
 			this.userInfo.TabIndex = 1;
+			this.userInfo.TabStop = true;
 			// 
 			// userName
 			// 
@@ -133,7 +136,7 @@
 			this.userName.Location = new System.Drawing.Point(0, 0);
 			this.userName.Margin = new Wisej.Web.Padding(0, 0, 0, 5);
 			this.userName.Name = "userName";
-			this.userName.Size = new System.Drawing.Size(218, 18);
+			this.userName.Size = new System.Drawing.Size(180, 19);
 			this.userName.TabIndex = 1;
 			this.userName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
@@ -144,11 +147,12 @@
 			this.userStatus.Controls.Add(this.userStatusName);
 			this.userInfo.SetFillWeight(this.userStatus, 1);
 			this.userStatus.LayoutStyle = Wisej.Web.FlexLayoutStyle.Horizontal;
-			this.userStatus.Location = new System.Drawing.Point(0, 23);
+			this.userStatus.Location = new System.Drawing.Point(0, 24);
 			this.userStatus.Margin = new Wisej.Web.Padding(0);
 			this.userStatus.Name = "userStatus";
-			this.userStatus.Size = new System.Drawing.Size(218, 18);
+			this.userStatus.Size = new System.Drawing.Size(180, 18);
 			this.userStatus.TabIndex = 2;
+			this.userStatus.TabStop = true;
 			// 
 			// userStatusColor
 			// 
@@ -167,9 +171,10 @@
 			// 
 			this.userStatusName.Anonymous = true;
 			this.userStatus.SetFillWeight(this.userStatusName, 1);
-			this.userStatusName.Location = new System.Drawing.Point(27, 3);
+			this.userStatusName.Location = new System.Drawing.Point(27, 1);
+			this.userStatusName.Margin = new Wisej.Web.Padding(3, 1, 3, 1);
 			this.userStatusName.Name = "userStatusName";
-			this.userStatusName.Size = new System.Drawing.Size(188, 12);
+			this.userStatusName.Size = new System.Drawing.Size(150, 16);
 			this.userStatusName.TabIndex = 1;
 			this.userStatusName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			// 
@@ -179,11 +184,12 @@
 			this.items.AutoSizeMode = Wisej.Web.AutoSizeMode.GrowAndShrink;
 			this.items.Dock = Wisej.Web.DockStyle.Top;
 			this.items.LayoutStyle = Wisej.Web.FlexLayoutStyle.Vertical;
-			this.items.Location = new System.Drawing.Point(0, 0);
+			this.items.Location = new System.Drawing.Point(3, 3);
 			this.items.Name = "items";
-			this.items.Size = new System.Drawing.Size(320, 0);
+			this.items.Size = new System.Drawing.Size(276, 0);
 			this.items.Spacing = 0;
 			this.items.TabIndex = 2;
+			this.items.TabStop = true;
 			this.items.ControlAdded += new Wisej.Web.ControlEventHandler(this.items_ControlAdded);
 			// 
 			// slideBar
@@ -194,7 +200,7 @@
 			this.slideBar.Margin = new Wisej.Web.Padding(0);
 			this.slideBar.Name = "slideBar";
 			this.slideBar.Orientation = Wisej.Web.Orientation.Vertical;
-			this.slideBar.Size = new System.Drawing.Size(320, 245);
+			this.slideBar.Size = new System.Drawing.Size(282, 422);
 			this.slideBar.TabIndex = 3;
 			// 
 			// NavigationBar
@@ -205,7 +211,7 @@
 			this.Controls.Add(this.user);
 			this.LayoutStyle = Wisej.Web.FlexLayoutStyle.Vertical;
 			this.Name = "NavigationBar";
-			this.Size = new System.Drawing.Size(320, 401);
+			this.Size = new System.Drawing.Size(282, 578);
 			this.header.ResumeLayout(false);
 			this.header.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.logo)).EndInit();

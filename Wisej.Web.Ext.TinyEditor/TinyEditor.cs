@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
+using System.Runtime.CompilerServices;
 using Wisej.Base;
 using Wisej.Core;
 using Wisej.Design;
@@ -301,6 +302,16 @@ namespace Wisej.Web.Ext.TinyEditor
 			ExecCommand(command, false, argument);
 		}
 
+		/// <summary>
+		/// Performs additional configuration to the widget.
+		/// </summary>
+		/// <param name="e"></param>
+		protected override void OnEnabledChanged(EventArgs e)
+		{
+			this.Call("setEditable", this.Enabled);
+
+			base.OnEnabledChanged(e);
+		}
 
 		#endregion
 
@@ -332,6 +343,8 @@ namespace Wisej.Web.Ext.TinyEditor
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			get
 			{
 				if (base.Packages.Count == 0)
@@ -348,6 +361,8 @@ namespace Wisej.Web.Ext.TinyEditor
 			}
 		}
 
+		// disable inlining or we lose the calling assembly in GetResourceString().
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		private string BuildInitScript()
 		{
 			IWisejControl me = this;
@@ -399,6 +414,10 @@ namespace Wisej.Web.Ext.TinyEditor
 					this.initialized = true;
 					if (!String.IsNullOrEmpty(this.Text))
 						Call("setText", TextUtils.EscapeText(this.Text, true));
+
+					if (!this.Enabled)
+						Call("setEditable", this.Enabled);
+
 					break;
 
 				case "changeText":
@@ -426,6 +445,24 @@ namespace Wisej.Web.Ext.TinyEditor
 				form.Activate();
 		}
 
+		/// <summary>
+		/// Causes the control to update the corresponding client side widget.
+		/// When in design mode, causes the rendered control to update its
+		/// entire surface in the designer.
+		/// </summary>
+		public override void Update()
+		{
+			// when updating and refreshing (IsNew = true)
+			// resend the focused cell and update the row selection.
+
+			IWisejComponent me = this;
+			if (me.IsNew)
+			{
+				Call("setText", TextUtils.EscapeText(this.Text, true));
+			}
+
+			base.Update();
+		}
 
 		#endregion
 	}

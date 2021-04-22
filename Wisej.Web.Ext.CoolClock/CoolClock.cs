@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using Wisej.Core;
 using Wisej.Design;
 
@@ -220,7 +221,39 @@ namespace Wisej.Web.Ext.CoolClock
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override string InitScript
 		{
-			get { return BuildInitScript(); }
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			get { return GetResourceString("Wisej.Web.Ext.CoolClock.JavaScript.startup.js"); }
+			set { }
+		}
+
+		/// <summary>
+		/// Overridden.
+		/// </summary>
+		[Browsable(false)]
+		[WisejSerializerOptions(WisejSerializerOptions.None)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public override dynamic Options
+		{
+			get
+			{
+				dynamic options = new DynamicObject();
+
+				options.skinId = this.Skin;
+				options.tickDelay = this.TickDelay;
+				options.longTickDelay = this.LongTickDelay;
+				options.showSecondHand = this.ShowSecondHand;
+				options.showDigital = this.ShowDigital;
+				options.gmtOffset = this.GmtOffset;
+				options.logClock = this.ClockType == CoolClockType.Logarithmic;
+				options.logClockRev = this.ClockType == CoolClockType.LogarithmicReversed;
+				options.displayRadius =
+					this.Width < this.Height
+						? this.Width / 2
+						: this.Height / 2;
+
+				return options;
+			}
 			set { }
 		}
 
@@ -231,6 +264,8 @@ namespace Wisej.Web.Ext.CoolClock
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Package> Packages
 		{
+			// disable inlining or we lose the calling assembly in GetResourceString().
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			get
 			{
 				if (base.Packages.Count == 0)
@@ -245,33 +280,6 @@ namespace Wisej.Web.Ext.CoolClock
 
 				return base.Packages;
 			}
-		}
-
-		private string BuildInitScript()
-		{
-
-			dynamic options = new DynamicObject();
-			string script = GetResourceString("Wisej.Web.Ext.CoolClock.JavaScript.startup.js");
-
-			// use ToString() in this case to keep the name uppercase first.
-			// Wisej JSON serializer always lowers the first character to keep with javascript naming convention.
-			options.skinId = this.Skin.ToString();
-
-			options.tickDelay = this.TickDelay;
-			options.longTickDelay = this.LongTickDelay;
-			options.showSecondHand = this.ShowSecondHand;
-			options.showDigital = this.ShowDigital;
-			options.gmtOffset = this.GmtOffset;
-			options.logClock = this.ClockType == CoolClockType.Logarithmic;
-			options.logClockRev = this.ClockType == CoolClockType.LogarithmicReversed;
-			options.displayRadius =
-				this.Width < this.Height
-					? this.Width / 2
-					: this.Height / 2;
-
-			script = script.Replace("$options", options.ToString());
-
-			return script;
 		}
 
 		#endregion
